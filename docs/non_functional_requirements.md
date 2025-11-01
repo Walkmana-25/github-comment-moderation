@@ -23,8 +23,21 @@ This document specifies the non-functional requirements for the GitHub Content M
 
 ## 5. Testing
 
+### 5.1. Unit Tests
+
 - The coding agent is expected to provide unit tests for the core logic of the action. This includes testing the logic for:
   - Parsing the OpenAI API response.
   - Comparing scores against thresholds.
   - Correctly identifying content as appropriate or inappropriate.
 - Mocking should be used to simulate API calls to OpenAI and GitHub to avoid reliance on external services during testing.
+
+### 5.2. Integration Tests
+
+- The agent must write integration tests to verify the end-to-end workflow of the action.
+- These tests should use sample GitHub event payloads (e.g., a sample `issue.opened` event) as input.
+- The tests must verify that the action correctly:
+  - Parses the input from the event payload.
+  - Calls the (mocked) OpenAI Moderation API with the correct text.
+  - Processes the (mocked) response from the OpenAI API.
+  - Calls the (mocked) GitHub API to hide the content if the moderation threshold is exceeded.
+  - Sets the correct action outputs (`is-inappropriate`, `flagged-categories`, etc.).
