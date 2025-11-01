@@ -36,7 +36,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          text-to-moderate: ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body }}
+          # The following expression covers most common event types. You may need to customize it for your workflow.
+          text-to-moderate: ${{ github.event.issue.body 
+            || github.event.pull_request.body 
+            || github.event.comment.body 
+            || github.event.discussion.body 
+            || github.event.discussion_comment.body 
+            || github.event.review.body }}
           # Optional: Define custom thresholds for moderation categories
           # threshold-hate: 0.5
           # threshold-sexual: 0.7
