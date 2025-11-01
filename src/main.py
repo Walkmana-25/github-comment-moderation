@@ -81,7 +81,7 @@ def moderate_content():
             "hate/threatening": float(os.getenv("INPUT_THRESHOLD-HATE-THREATENING", 0.5)),
             "sexual": float(os.getenv("INPUT_THRESHOLD-SEXUAL", 0.5)),
             "violence": float(os.getenv("INPUT_THRESHOLD-VIOLENCE", 0.5)),
-            "self-harm": float(os.getenv("INPUT_THRESHOLD-SELF-HARM", 0.5)),
+            "self_harm": float(os.getenv("INPUT_THRESHOLD-SELF-HARM", 0.5)),
         }
 
         is_inappropriate = False
