@@ -21,16 +21,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Action
+        run: npm run build
+
       - name: Run Moderator Action
         uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           text-to-moderate: |
-            ${{ github.event.issue.title }}
-            ${{ github.event.issue.body }}
-            ${{ github.event.pull_request.title }}
-            ${{ github.event.pull_request.body }}
-            ${{ github.event.comment.body }}
-            ${{ github.event.discussion.title }}
-            ${{ github.event.discussion.body }}
+            ${{ github.event.issue.title || github.event.pull_request.title || github.event.discussion.title || '' }}
+            ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body || '' }}
