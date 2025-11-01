@@ -35,7 +35,7 @@ The text to be moderated will be passed via the `text-to-moderate` input.
 - The specific API endpoint and method to use will depend on the content type (Issue, PR, Comment, or Discussion). The agent is expected to implement the correct logic to identify the content type and hide it.
   - For example, to hide a comment, the agent might use the GraphQL API's `minimizeComment` mutation. The agent is responsible for researching and implementing the appropriate method for each content type.
   - **Note**: The GitHub API for hiding or moderating Discussions and their comments may differ from those for issues and pull requests. The agent must research and implement the correct GraphQL mutations or REST API endpoints for these content types as well.
-- The reason for hiding the content should be specified as "SPAM" or "ABUSE" (or another appropriate reason that indicates a policy violation), to align with GitHub's minimize comment reasons for moderation purposes.
+- The reason for hiding the content should be specified as "OFF_TOPIC" or an equivalent reason that indicates a policy violation.
 
 ## 5. Error Handling
 
