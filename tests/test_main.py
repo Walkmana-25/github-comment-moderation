@@ -25,7 +25,7 @@ class TestContentModerator(unittest.TestCase):
             "INPUT_OPENAI-API-KEY": "fake-key",
             "INPUT_TEXT-TO-MODERATE": "This is a clean message.",
             "GITHUB_OUTPUT": "test_output.json",
-        }.get(key, default)
+        }.get(key, default if default is not None else "0.5")
 
         # Mock the API response for clean content
         mock_response = MagicMock()
