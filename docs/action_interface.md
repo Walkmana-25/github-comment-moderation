@@ -17,9 +17,9 @@ This document defines the interface for the GitHub Action, which will be specifi
 
 ### `text-to-moderate`
 
-- **Description**: The text content to be moderated. This will typically be the body of an issue, pull request, or comment.
+- **Description**: The text content to be moderated. This will typically be the body of an issue, pull request, discussion, or a comment.
 - **Required**: `true`
-- **Example**: `${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body }}`
+- **Example**: `${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body }}`
 
 ### `threshold-hate`
 

@@ -20,6 +20,12 @@ on:
     types: [opened, edited]
   issue_comment:
     types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  discussion:
+    types: [created, edited]
+  discussion_comment:
+    types: [created, edited]
 
 jobs:
   moderate:
@@ -30,7 +36,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          text-to-moderate: ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body }}
+          text-to-moderate: ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body }}
           # Optional: Define custom thresholds for moderation categories
           # threshold-hate: 0.5
           # threshold-sexual: 0.7

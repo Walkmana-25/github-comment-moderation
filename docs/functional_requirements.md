@@ -8,6 +8,9 @@ The action must be able to moderate the text content from the following GitHub e
 - Issues (`issues` event: `opened`, `edited` types)
 - Pull Requests (`pull_request` event: `opened`, `edited` types)
 - Issue Comments (`issue_comment` event: `created`, `edited` types)
+- Pull Request Comments (`pull_request_review_comment` event: `created`, `edited` types)
+- Discussions (`discussion` event: `created`, `edited` types)
+- Discussion Comments (`discussion_comment` event: `created`, `edited` types)
 
 The text to be moderated will be passed via the `text-to-moderate` input.
 
@@ -29,8 +32,9 @@ The text to be moderated will be passed via the `text-to-moderate` input.
 
 - If the content is flagged as inappropriate, the action must use the GitHub API to hide the content.
 - The `github-token` input must be used for authentication with the GitHub API.
-- The specific API endpoint and method to use will depend on the content type (Issue, PR, or Comment). The agent is expected to implement the correct logic to identify the content type and hide it.
+- The specific API endpoint and method to use will depend on the content type (Issue, PR, Comment, or Discussion). The agent is expected to implement the correct logic to identify the content type and hide it.
   - For example, to hide a comment, the agent might use the GraphQL API's `minimizeComment` mutation. The agent is responsible for researching and implementing the appropriate method for each content type.
+  - **Note**: The GitHub API for hiding or moderating Discussions and their comments may differ from those for issues and pull requests. The agent must research and implement the correct GraphQL mutations or REST API endpoints for these content types as well.
 - The reason for hiding the content should be specified as "OFF_TOPIC" or an equivalent reason that indicates a policy violation.
 
 ## 5. Error Handling
