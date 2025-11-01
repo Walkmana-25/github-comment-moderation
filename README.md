@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Moderate content
-        uses: {your-username}/{this-repo-name}@main
+        uses: Walkmana-25/github-comment-moderation@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}

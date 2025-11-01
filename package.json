@@ -1,0 +1,43 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "This GitHub Action moderates the content of issues, pull requests, and comments using the OpenAI Content Moderation API. If content is flagged as inappropriate based on a user-defined threshold, it will be hidden.",
+  "main": "dist/main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Walkmana-25/github-comment-moderation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Walkmana-25/github-comment-moderation/issues"
+  },
+  "homepage": "https://github.com/Walkmana-25/github-comment-moderation#readme",
+  "devDependencies": {
+    "@types/jest": "29.5.2",
+    "@types/node": "^24.9.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.39.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "jest": "29.5.0",
+    "prettier": "^3.6.2",
+    "ts-jest": "29.1.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "openai": "^6.7.0"
+  }
+}
