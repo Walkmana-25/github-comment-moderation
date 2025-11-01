@@ -39,5 +39,5 @@ outputs:
   moderation-results-json:
     description: 'The full JSON response from the OpenAI Moderation API.'
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'node20'
+  main: 'dist/index.js'
