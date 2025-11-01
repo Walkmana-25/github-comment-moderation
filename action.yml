@@ -1,0 +1,43 @@
+name: 'GitHub Content Moderator'
+description: 'Moderates content in issues, PRs, and comments using the OpenAI API.'
+inputs:
+  github-token:
+    description: 'The GitHub token.'
+    required: true
+    default: '${{ github.token }}'
+  openai-api-key:
+    description: 'The OpenAI API key.'
+    required: true
+  text-to-moderate:
+    description: 'The text to moderate.'
+    required: true
+  threshold-hate:
+    description: 'Threshold for the "hate" category.'
+    required: false
+    default: '0.5'
+  threshold-hate-threatening:
+    description: 'Threshold for the "hate/threatening" category.'
+    required: false
+    default: '0.5'
+  threshold-sexual:
+    description: 'Threshold for the "sexual" category.'
+    required: false
+    default: '0.5'
+  threshold-violence:
+    description: 'Threshold for the "violence" category.'
+    required: false
+    default: '0.5'
+  threshold-self-harm:
+    description: 'Threshold for the "self-harm" category.'
+    required: false
+    default: '0.5'
+outputs:
+  is-inappropriate:
+    description: 'Whether the content was flagged as inappropriate.'
+  flagged-categories:
+    description: 'A comma-separated list of flagged categories.'
+  moderation-results-json:
+    description: 'The full JSON response from the OpenAI Moderation API.'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
