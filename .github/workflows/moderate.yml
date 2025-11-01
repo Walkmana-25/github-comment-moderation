@@ -1,0 +1,42 @@
+name: Moderate Content
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  discussion:
+    types: [created, edited]
+  discussion_comment:
+    types: [created, edited]
+
+jobs:
+  moderate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Action
+        run: npm run build
+
+      - name: Run Moderator Action
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          text-to-moderate: |
+            ${{ github.event.issue.title || github.event.pull_request.title || github.event.discussion.title || '' }}
+            ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body || '' }}
