@@ -8,8 +8,9 @@ This document specifies the non-functional requirements for the GitHub Content M
 
 ## 2. Technology Stack
 
-- **Programming Language**: The action must be implemented using **Python**.
-- **Dependencies**: The agent should choose well-maintained and reputable Python libraries for making HTTP requests (e.g., `requests`) and interacting with the GitHub environment. All dependencies must be documented in a `requirements.txt` file.
+- **Programming Language**: The action must be implemented using **TypeScript**.
+- **Dependencies**: The agent must use `npm` for dependency management. All dependencies must be documented in a `package.json` file. The agent should choose well-maintained and reputable libraries for the implementation.
+- **Testing Framework**: **Jest** should be used for writing and running tests.
 
 ## 3. Performance
 
@@ -17,7 +18,7 @@ This document specifies the non-functional requirements for the GitHub Content M
 
 ## 4. Code Quality and Maintainability
 
-- **Style Guide**: The Python code should adhere to the PEP 8 style guide.
+- **Style Guide**: The TypeScript code should be formatted using a standard formatter like Prettier. A linter (e.g., ESLint) should be configured to enforce code quality.
 - **Documentation**: The code should be well-commented, especially for complex logic related to API interactions and content hiding procedures.
 - **Structure**: The project should be structured logically, separating concerns where appropriate (e.g., API clients, business logic).
 
