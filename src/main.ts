@@ -87,12 +87,22 @@ export async function run(): Promise<void> {
   try {
     // Get inputs
     const githubToken: string = core.getInput('github-token', { required: true });
-    const openaiApiKey: string = core.getInput('openai-api-key', { required: true });
+    let openaiApiKey: string = core.getInput('openai-api-key', { required: false });
+    const openaiEndpoint: string = core.getInput('openai-endpoint', { required: false });
+    const openaiModel: string = core.getInput('openai-model', { required: false });
     const textToModerate: string = core.getInput('text-to-moderate', { required: true });
     const retryCount: number = parseInt(core.getInput('retry-count', { required: false }) || '3', 10);
 
+    // Use github-token as the default API key if openai-api-key is not provided
+    if (!openaiApiKey) {
+        openaiApiKey = githubToken;
+    }
+
     // Initialize OpenAI client
-    const openai = new OpenAI({ apiKey: openaiApiKey });
+    const openai = new OpenAI({
+        apiKey: openaiApiKey,
+        baseURL: openaiEndpoint,
+    });
 
     const prompt = constructPrompt(textToModerate);
 
@@ -101,7 +111,7 @@ export async function run(): Promise<void> {
     for (let i = 0; i < retryCount; i++) {
         try {
             const completion = await openai.chat.completions.create({
-                model: 'gpt-4o', // Or another suitable model that supports JSON mode
+                model: openaiModel,
                 messages: [{ role: 'user', content: prompt }],
                 response_format: { type: 'json_object' },
             });

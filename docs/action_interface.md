@@ -12,8 +12,21 @@ This document defines the interface for the GitHub Action, which will be specifi
 
 ### `openai-api-key`
 
-- **Description**: The API key for the OpenAI service. This is required to access the Completions API endpoint.
-- **Required**: `true`
+- **Description**: The API key for the OpenAI service. If not provided, the action will use the `github-token` to authenticate against the GitHub Models endpoint.
+- **Required**: `false`
+- **Default**: `''`
+
+### `openai-endpoint`
+
+- **Description**: The endpoint for the OpenAI compatible API. Defaults to the GitHub Models endpoint.
+- **Required**: `false`
+- **Default**: `https://models.github.ai/inference/chat/completions`
+
+### `openai-model`
+
+- **Description**: The name of the OpenAI model to use for moderation.
+- **Required**: `false`
+- **Default**: `gpt-4.1-mini`
 
 ### `retry-count`
 
