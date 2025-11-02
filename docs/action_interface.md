@@ -12,8 +12,14 @@ This document defines the interface for the GitHub Action, which will be specifi
 
 ### `openai-api-key`
 
-- **Description**: The API key for the OpenAI service. This is required to access the content moderation endpoint.
+- **Description**: The API key for the OpenAI service. This is required to access the Completions API endpoint.
 - **Required**: `true`
+
+### `retry-count`
+
+- **Description**: The number of times to retry the OpenAI API call on failure.
+- **Required**: `false`
+- **Default**: `3`
 
 ### `text-to-moderate`
 
@@ -65,4 +71,4 @@ This document defines the interface for the GitHub Action, which will be specifi
 
 ### `moderation-results-json`
 
-- **Description**: The full JSON response from the OpenAI Moderation API for logging and debugging purposes.
+- **Description**: The full JSON response from the OpenAI Completions API for logging and debugging purposes.
