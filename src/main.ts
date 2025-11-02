@@ -92,6 +92,7 @@ export async function run(): Promise<void> {
     const openaiModel: string = core.getInput('openai-model', { required: false });
     const textToModerate: string = core.getInput('text-to-moderate', { required: true });
     const retryCount: number = parseInt(core.getInput('retry-count', { required: false }) || '3', 10);
+    const spamLabel: string = core.getInput('spam-label', { required: false });
 
     // Use github-token as the default API key if openai-api-key is not provided
     if (!openaiApiKey) {
@@ -154,6 +155,21 @@ export async function run(): Promise<void> {
         core.info(`Successfully hid content with node_id: ${nodeId}`);
       } catch (hideError) {
           core.warning(`Failed to hide content. This might be due to missing permissions or an unsupported event type. Error: ${hideError}`);
+      }
+
+      if (spamLabel && github.context.eventName === 'issues' && github.context.payload.issue) {
+          try {
+              const octokit = github.getOctokit(githubToken);
+              await octokit.rest.issues.addLabels({
+                  owner: github.context.repo.owner,
+                  repo: github.context.repo.repo,
+                  issue_number: github.context.payload.issue.number,
+                  labels: [spamLabel],
+              });
+              core.info(`Successfully added label "${spamLabel}" to the issue.`);
+          } catch (labelError) {
+              core.warning(`Failed to add label. This might be due to missing permissions. Error: ${labelError}`);
+          }
       }
 
       core.info(`Content was flagged as inappropriate. Categories: ${flaggedCategoriesStr}. Reasoning: ${moderationResult.reasoning || 'N/A'}`);
