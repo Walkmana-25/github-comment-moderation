@@ -16,6 +16,9 @@ on:
 
 permissions:
   models: read
+  issues: write
+  pull-requests: write
+  discussions: write
 
 jobs:
   moderate:
