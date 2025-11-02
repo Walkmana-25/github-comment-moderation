@@ -12,7 +12,7 @@ inputs:
   openai-endpoint:
     description: 'The OpenAI API endpoint.'
     required: false
-    default: 'https://models.github.ai/inference/chat/completions'
+    default: 'https://models.github.ai/inference'
   openai-model:
     description: 'The OpenAI model to use.'
     required: false
