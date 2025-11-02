@@ -58,7 +58,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-
+          # Optional: Add a 'spam' label to issues flagged as inappropriate
+          spam-label: 'spam'
           text-to-moderate: ${{ steps.prepare_text.outputs.text }}
 
 

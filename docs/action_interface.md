@@ -34,6 +34,12 @@ This document defines the interface for the GitHub Action, which will be specifi
 - **Required**: `false`
 - **Default**: `3`
 
+### `spam-label`
+
+- **Description**: The label to add to the issue if the content is flagged as spam. This is only applicable when the event is `issues`.
+- **Required**: `false`
+- **Default**: `''`
+
 ### `text-to-moderate`
 
 - **Description**: The text content to be moderated. This will typically be the body of an issue, pull request, discussion, or a comment.

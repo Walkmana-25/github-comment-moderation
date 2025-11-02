@@ -24,6 +24,10 @@ inputs:
     description: 'The number of times to retry the OpenAI API call on failure.'
     required: false
     default: '3'
+  spam-label:
+    description: 'The label to add to the issue if the content is flagged as spam.'
+    required: false
+    default: ''
 outputs:
   is-inappropriate:
     description: 'Whether the content was flagged as inappropriate.'
