@@ -11,33 +11,17 @@ inputs:
   text-to-moderate:
     description: 'The text to moderate.'
     required: true
-  threshold-hate:
-    description: 'Threshold for the "hate" category.'
+  retry-count:
+    description: 'The number of times to retry the OpenAI API call on failure.'
     required: false
-    default: '0.5'
-  threshold-hate-threatening:
-    description: 'Threshold for the "hate/threatening" category.'
-    required: false
-    default: '0.5'
-  threshold-sexual:
-    description: 'Threshold for the "sexual" category.'
-    required: false
-    default: '0.5'
-  threshold-violence:
-    description: 'Threshold for the "violence" category.'
-    required: false
-    default: '0.5'
-  threshold-self-harm:
-    description: 'Threshold for the "self-harm" category.'
-    required: false
-    default: '0.5'
+    default: '3'
 outputs:
   is-inappropriate:
     description: 'Whether the content was flagged as inappropriate.'
   flagged-categories:
     description: 'A comma-separated list of flagged categories.'
   moderation-results-json:
-    description: 'The full JSON response from the OpenAI Moderation API.'
+    description: 'The full JSON response from the OpenAI API.'
 runs:
   using: 'node20'
   main: 'dist/index.js'
