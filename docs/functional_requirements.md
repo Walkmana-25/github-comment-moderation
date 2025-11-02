@@ -23,10 +23,48 @@ The text to be moderated will be passed via the `text-to-moderate` input.
 
 ## 3. Inappropriate Content Detection Logic
 
-- The action must parse the structured JSON response from the OpenAI Completions API.
-- Based on the content of the JSON response, the action will determine if the content is "inappropriate". The specific fields to check in the JSON will be defined by the prompt.
-- The action should set the `is-inappropriate` output to `'true'` if the content is deemed inappropriate, and `'false'` otherwise.
-- The `flagged-categories` output should be populated with a comma-separated list of categories identified in the JSON response.
+- The action must parse the structured JSON response from the OpenAI Completions API. The primary indicator for inappropriate content is the `is_inappropriate` boolean field in the JSON response.
+- The action should set the `is-inappropriate` output to `'true'` if `is_inappropriate` is `true` in the response, and `'false'` otherwise.
+- The `flagged-categories` output should be populated with a comma-separated list of the strings from the `flagged_categories` array in the JSON response.
+
+### 3.1. Expected JSON Schema
+
+The prompt sent to the Completions API must instruct the model to return a JSON object that adheres to the following schema:
+
+```json
+{
+  "is_inappropriate": "boolean",
+  "flagged_categories": "array of strings",
+  "reasoning": "string",
+  "confidence_score": "float"
+}
+```
+
+- **`is_inappropriate`**: (Required) A boolean indicating if the content violates the moderation policy.
+- **`flagged_categories`**: (Required) A list of categories (e.g., "hate", "sexual", "violence") that were flagged. Should be an empty array if `is_inappropriate` is false.
+- **`reasoning`**: (Optional) A brief explanation for the moderation decision, useful for logging and debugging.
+- **`confidence_score`**: (Optional) A float between 0.0 and 1.0 representing the model's confidence in its decision.
+
+### 3.2. Example Prompt
+
+The action should use a configurable prompt. A suitable default prompt would be:
+
+```
+You are a content moderator for a GitHub repository. Please analyze the following text and determine if it violates our content policy. The policy prohibits hate speech, sexual content, violence, and self-harm.
+
+Please respond with a JSON object that follows this exact schema:
+{
+  "is_inappropriate": "boolean",
+  "flagged_categories": "array of strings",
+  "reasoning": "string",
+  "confidence_score": "float"
+}
+
+Here is the text to analyze:
+---
+[TEXT TO MODERATE HERE]
+---
+```
 
 ## 4. Action on Inappropriate Content
 
