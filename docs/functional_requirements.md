@@ -14,19 +14,19 @@ The action must be able to moderate the text content from the following GitHub e
 
 The text to be moderated will be passed via the `text-to-moderate` input.
 
-## 2. Integration with OpenAI Content Moderation API
+## 2. Integration with OpenAI Completions API
 
-- The action must make a POST request to the OpenAI Content Moderation API endpoint (`https://api.openai.com/v1/moderations`).
+- The action must send a prompt to the OpenAI Completions API. This prompt will instruct the language model to act as a content moderator.
+- The action must leverage a feature of the Completions API, such as "JSON mode", to guarantee that the model's response is a valid, structured JSON object.
 - The request must include the `text-to-moderate` input as the content to be analyzed.
 - The `openai-api-key` input must be used for authentication with the OpenAI API.
 
 ## 3. Inappropriate Content Detection Logic
 
-- The action must parse the JSON response from the OpenAI API.
-- It will compare the scores for each moderation category (e.g., `hate`, `sexual`, etc.) against the corresponding `threshold-*` inputs provided by the user.
-- If any category score exceeds its respective threshold, the content is considered "inappropriate".
+- The action must parse the structured JSON response from the OpenAI Completions API.
+- Based on the content of the JSON response, the action will determine if the content is "inappropriate". The specific fields to check in the JSON will be defined by the prompt.
 - The action should set the `is-inappropriate` output to `'true'` if the content is deemed inappropriate, and `'false'` otherwise.
-- The `flagged-categories` output should be populated with a comma-separated list of categories that exceeded their thresholds.
+- The `flagged-categories` output should be populated with a comma-separated list of categories identified in the JSON response.
 
 ## 4. Action on Inappropriate Content
 
@@ -44,4 +44,5 @@ The text to be moderated will be passed via the `text-to-moderate` input.
   - Network issues when communicating with the OpenAI API.
   - Invalid GitHub token or insufficient permissions.
   - Errors from the GitHub API when attempting to hide content.
+- The action must retry failed API calls. The number of retries is determined by the `retry-count` input.
 - In case of an error, the action should fail with a clear and descriptive error message logged to the console.
