@@ -30,14 +30,22 @@ on:
 jobs:
   moderate:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      discussions: write
     steps:
       - name: Moderate content
+        id: moderator
         uses: Walkmana-25/github-comment-moderation@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           text-to-moderate: ${{ github.event.issue.body || github.event.pull_request.body || github.event.comment.body || github.event.discussion.body }}
-          # Optional: Define custom thresholds for moderation categories
-          # threshold-hate: 0.5
-          # threshold-sexual: 0.7
+
+      - name: Post-moderation summary
+        if: steps.moderator.outputs.is-inappropriate == 'true'
+        run: |
+          echo "Content was flagged for the following reasons: ${{ steps.moderator.outputs.flagged-categories }}"
+          echo "The content has been hidden, and the workflow continues to run successfully."
 ```

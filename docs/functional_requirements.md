@@ -73,7 +73,8 @@ Here is the text to analyze:
 - The specific API endpoint and method to use will depend on the content type (Issue, PR, Comment, or Discussion). The agent is expected to implement the correct logic to identify the content type and hide it.
   - For example, to hide a comment, the agent might use the GraphQL API's `minimizeComment` mutation. The agent is responsible for researching and implementing the appropriate method for each content type.
   - **Note**: The GitHub API for hiding or moderating Discussions and their comments may differ from those for issues and pull requests. The agent must research and implement the correct GraphQL mutations or REST API endpoints for these content types as well.
-- The reason for hiding the content should be specified as "OFF_TOPIC" or an equivalent reason that indicates a policy violation.
+- The reason for hiding the content should be specified as "ABUSE".
+- After successfully hiding the content, the action should log the moderation details and complete with a 'success' status. It should not fail the workflow.
 
 ## 5. Error Handling
 
