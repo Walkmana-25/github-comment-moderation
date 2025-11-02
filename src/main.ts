@@ -59,7 +59,7 @@ async function hideContent(githubToken: string, nodeId: string) {
     `, {
       input: {
         subjectId: nodeId,
-        classifier: 'OFF_TOPIC',
+        classifier: 'ABUSE',
       }
     });
   }
@@ -156,7 +156,7 @@ export async function run(): Promise<void> {
           core.warning(`Failed to hide content. This might be due to missing permissions or an unsupported event type. Error: ${hideError}`);
       }
 
-      core.setFailed(`Content was flagged as inappropriate. Categories: ${flaggedCategoriesStr}. Reasoning: ${moderationResult.reasoning || 'N/A'}`);
+      core.info(`Content was flagged as inappropriate. Categories: ${flaggedCategoriesStr}. Reasoning: ${moderationResult.reasoning || 'N/A'}`);
     } else {
       core.setOutput('is-inappropriate', 'false');
       core.setOutput('flagged-categories', '');

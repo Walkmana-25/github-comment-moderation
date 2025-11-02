@@ -70,14 +70,15 @@ describe('Content Moderator Action', () => {
     expect(mockGraphql).toHaveBeenCalledWith(expect.any(String), {
       input: {
         subjectId: 'test-node-id',
-        classifier: 'OFF_TOPIC',
+        classifier: 'ABUSE',
       },
     });
     expect(mockedCore.setOutput).toHaveBeenCalledWith('is-inappropriate', 'true');
     expect(mockedCore.setOutput).toHaveBeenCalledWith('flagged-categories', 'hate,violence');
-    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+    expect(mockedCore.info).toHaveBeenCalledWith(
       expect.stringContaining('Content was flagged as inappropriate.')
     );
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
   });
 
   it('should not hide content if it is appropriate', async () => {
