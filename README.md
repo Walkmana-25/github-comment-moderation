@@ -58,7 +58,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+
           text-to-moderate: ${{ steps.prepare_text.outputs.text }}
+
 
       - name: Post-moderation summary
         if: steps.moderator.outputs.is-inappropriate == 'true'
