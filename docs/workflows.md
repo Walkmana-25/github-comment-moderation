@@ -52,8 +52,8 @@ This document defines the requirements for the CI/CD workflows for this project.
   - **`moderate`**:
     - **Runner**: `ubuntu-latest`
     - **Steps**:
-      1.  **Checkout Code**: Use `actions/checkout@v3` or a later version.
-      2.  **Run Moderator Action**: Use the action from the local repository (`uses: ./`).
-          - Pass the required inputs: `github-token` and `openai-api-key` (as secrets).
-          - Pass the text content from the event payload.
-          - The agent can define appropriate default thresholds for this repository.
+      1.  **Checkout Code**: Use `actions/checkout@v4` or a later version.
+      2.  **Setup Node.js, Install Dependencies, Build Action**: Before running the action, the workflow must include steps to install Node.js, run `npm install`, and `npm run build` to ensure the compiled action (`dist/index.js`) is available.
+      3.  **Prepare Moderation Text**: A step that uses a shell script to check the `github.event_name` and extracts the correct text content (e.g., comment body, issue body, or pull request body) from the event payload. This text is then passed to the next step via a step output. This approach is more robust than using a single-line expression with `||` operators.
+      4.  **Run Moderator Action**: Use the action from the local repository (`uses: ./`).
+          - Pass the required inputs, including `github-token`, `openai-api-key` (as secrets), and the `text-to-moderate` from the previous step's output.
