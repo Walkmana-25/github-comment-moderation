@@ -1,19 +1,20 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import OpenAI from 'openai';
 import { run } from '../src/main';
 
 // Mock the entire modules
 jest.mock('@actions/core');
 const mockedCore = core as jest.Mocked<typeof core>;
 
+// Mock OpenAI chat completions
 const mockCreate = jest.fn();
 jest.mock('openai', () => {
   return jest.fn().mockImplementation(() => {
-    return { moderations: { create: mockCreate } };
+    return { chat: { completions: { create: mockCreate } } };
   });
 });
 
+// Mock GitHub API
 const mockGraphql = jest.fn();
 jest.mock('@actions/github', () => ({
   ...jest.requireActual('@actions/github'),
@@ -30,16 +31,12 @@ jest.mock('@actions/github', () => ({
   },
 }));
 
-// Define a type for the mocked moderation response
-type MockModerationResult = {
-  results: [ { categories: { [key: string]: boolean; }; category_scores: { [key: string]: number; }; } ];
-};
-
 describe('Content Moderator Action', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Setup mock inputs
     mockedCore.getInput.mockImplementation((name: string) => {
       switch (name) {
         case 'github-token':
@@ -47,76 +44,98 @@ describe('Content Moderator Action', () => {
         case 'openai-api-key':
           return 'test-api-key';
         case 'text-to-moderate':
-          return 'This is a test text.';
+          return 'This is some test text.';
+        case 'retry-count':
+          return '3';
         default:
-          return '0.5';
+          return '';
       }
     });
   });
 
-  it('should hide comment and fail if content is inappropriate', async () => {
-    const mockResponse: MockModerationResult = {
-      results: [{
-        categories: { hate: true, violence: true },
-        category_scores: { hate: 0.9, violence: 0.8 },
-      }],
+  it('should hide content and fail if content is inappropriate', async () => {
+    const mockApiResponse = {
+      is_inappropriate: true,
+      flagged_categories: ['hate', 'violence'],
+      reasoning: 'The text contains hateful and violent content.',
     };
-    mockCreate.mockResolvedValue(mockResponse);
+    mockCreate.mockResolvedValue({
+      choices: [{ message: { content: JSON.stringify(mockApiResponse) } }],
+    });
     mockGraphql.mockResolvedValue({ minimizeComment: { clientMutationId: '1' } });
 
     await run();
 
+    expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(mockGraphql).toHaveBeenCalledWith(expect.any(String), {
-        input: {
-          subjectId: 'test-node-id',
-          classifier: 'OFF_TOPIC',
-        },
-      });
+      input: {
+        subjectId: 'test-node-id',
+        classifier: 'OFF_TOPIC',
+      },
+    });
+    expect(mockedCore.setOutput).toHaveBeenCalledWith('is-inappropriate', 'true');
+    expect(mockedCore.setOutput).toHaveBeenCalledWith('flagged-categories', 'hate,violence');
     expect(mockedCore.setFailed).toHaveBeenCalledWith(
-      'Content was flagged as inappropriate for the following categories: hate, violence'
+      expect.stringContaining('Content was flagged as inappropriate.')
     );
   });
 
-  it('should succeed and not hide comment if content is appropriate', async () => {
-    const mockResponse: MockModerationResult = {
-        results: [{
-          categories: { hate: false, violence: false },
-          category_scores: { hate: 0.1, violence: 0.1 },
-        }],
-      };
-      mockCreate.mockResolvedValue(mockResponse);
-
-      await run();
-
-      expect(mockGraphql).not.toHaveBeenCalled();
-      expect(mockedCore.setFailed).not.toHaveBeenCalled();
-      expect(mockedCore.setOutput).toHaveBeenCalledWith('is-inappropriate', 'false');
-  });
-
-  it('should fail if OpenAI API call fails', async () => {
-    const errorMessage = 'API Error';
-    mockCreate.mockRejectedValue(new Error(errorMessage));
+  it('should not hide content if it is appropriate', async () => {
+    const mockApiResponse = {
+      is_inappropriate: false,
+      flagged_categories: [],
+    };
+    mockCreate.mockResolvedValue({
+      choices: [{ message: { content: JSON.stringify(mockApiResponse) } }],
+    });
 
     await run();
 
     expect(mockGraphql).not.toHaveBeenCalled();
-    expect(mockedCore.setFailed).toHaveBeenCalledWith(errorMessage);
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
+    expect(mockedCore.setOutput).toHaveBeenCalledWith('is-inappropriate', 'false');
+    expect(mockedCore.setOutput).toHaveBeenCalledWith('flagged-categories', '');
   });
 
-  it('should fail if hiding comment fails', async () => {
-    const mockResponse: MockModerationResult = {
-        results: [{
-          categories: { hate: true },
-          category_scores: { hate: 0.9 },
-        }],
-      };
-    mockCreate.mockResolvedValue(mockResponse);
-    const graphqlError = new Error('GraphQL Error');
-    mockGraphql.mockRejectedValue(graphqlError);
+  it('should retry OpenAI API call on failure', async () => {
+    const mockApiResponse = {
+      is_inappropriate: false,
+      flagged_categories: [],
+    };
+    mockCreate
+      .mockRejectedValueOnce(new Error('API Error 1'))
+      .mockRejectedValueOnce(new Error('API Error 2'))
+      .mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify(mockApiResponse) } }],
+      });
 
     await run();
 
-    expect(mockGraphql).toHaveBeenCalled();
-    expect(mockedCore.setFailed).toHaveBeenCalledWith('GraphQL Error');
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
+  });
+
+  it('should fail after all retries are exhausted', async () => {
+    const errorMessage = 'Final API Error';
+    mockCreate.mockRejectedValue(new Error(errorMessage));
+
+    await run();
+
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(errorMessage);
+  });
+
+  it('should fail if the API response has an invalid JSON schema', async () => {
+    const invalidResponse = {
+        // Missing 'is_inappropriate' and 'flagged_categories'
+        some_other_field: true,
+    };
+    mockCreate.mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify(invalidResponse) } }],
+    });
+
+    await run();
+
+    expect(mockedCore.setFailed).toHaveBeenCalledWith('Invalid JSON schema received from OpenAI API.');
   });
 });
