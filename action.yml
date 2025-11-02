@@ -6,8 +6,17 @@ inputs:
     required: true
     default: '${{ github.token }}'
   openai-api-key:
-    description: 'The OpenAI API key.'
-    required: true
+    description: 'The OpenAI API key. If not provided, the `github-token` will be used to authenticate with the GitHub Copilot API.'
+    required: false
+    default: ''
+  openai-endpoint:
+    description: 'The OpenAI API endpoint.'
+    required: false
+    default: 'https://models.github.ai/inference/chat/completions'
+  openai-model:
+    description: 'The OpenAI model to use.'
+    required: false
+    default: 'gpt-4.1-mini'
   text-to-moderate:
     description: 'The text to moderate.'
     required: true
