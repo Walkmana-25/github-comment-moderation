@@ -16,7 +16,7 @@ inputs:
   openai-model:
     description: 'The OpenAI model to use.'
     required: false
-    default: 'gpt-4.1-mini'
+    default: 'openai/gpt-4.1-mini'
   text-to-moderate:
     description: 'The text to moderate.'
     required: true
