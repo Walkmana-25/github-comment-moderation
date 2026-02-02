@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import OpenAI from 'openai';
+import { TextNormalizer } from './utils/textNormalizer';
 
 // Defines the expected JSON schema from the OpenAI Completions API
 interface ModerationResponse {
@@ -65,22 +66,27 @@ async function hideContent(githubToken: string, nodeId: string) {
   }
 
 function constructPrompt(textToModerate: string): string {
-    return `
-You are a content moderator for a GitHub repository. Please analyze the following text and determine if it violates our content policy. The policy prohibits hate speech, sexual content, violence, and self-harm.
+  return `You are a content moderator for a GitHub repository. Analyze the following content and determine if it violates our content policy.
 
-Please respond with a JSON object that follows this exact schema:
+Content Policy Prohibits:
+- Hate speech or discriminatory language
+- Sexual content or explicit material
+- Violence, threats, or promoting harm
+- Self-harm or suicide-related content
+- Harassment or bullying
+
+Please respond with a JSON object following this exact schema:
 {
   "is_inappropriate": "boolean",
-  "flagged_categories": "array of strings",
-  "reasoning": "string",
-  "confidence_score": "float"
+  "flagged_categories": "array of strings (e.g., ['hate', 'violence'])",
+  "reasoning": "string explaining the decision",
+  "confidence_score": "float between 0 and 1"
 }
 
-Here is the text to analyze:
+Content to analyze:
 ---
 ${textToModerate}
----
-`;
+---`;
 }
 
 export async function run(): Promise<void> {
@@ -104,7 +110,11 @@ export async function run(): Promise<void> {
         baseURL: openaiEndpoint,
     });
 
-    const prompt = constructPrompt(textToModerate);
+    // Step 1: Normalize text for consistent moderation
+    const normalizedText = TextNormalizer.normalize(textToModerate);
+
+    // Step 2: Build enhanced prompt
+    const prompt = constructPrompt(normalizedText);
 
     let moderationResult: ModerationResponse | null = null;
 
