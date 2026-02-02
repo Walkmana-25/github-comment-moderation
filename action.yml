@@ -18,8 +18,9 @@ inputs:
     required: false
     default: 'openai/gpt-4.1-mini'
   text-to-moderate:
-    description: 'The text to moderate.'
-    required: true
+    description: 'The text to moderate. If not provided, will be auto-populated from the event (title + body for Issues/PRs/Discussions, body only for comments).'
+    required: false
+    default: ''
   retry-count:
     description: 'The number of times to retry the OpenAI API call on failure.'
     required: false

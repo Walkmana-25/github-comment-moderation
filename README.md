@@ -2,9 +2,18 @@
 
 ## Overview
 
-This GitHub Action moderates the content of issues, pull requests, and comments using the OpenAI Content Moderation API. It also supports OpenAI-compatible custom endpoints by setting the `openai-api-base-url` input to your custom API base URL. If content is flagged as inappropriate based on a user-defined threshold, it will be hidden.
+This GitHub Action moderates the content of issues, pull requests, and comments using the OpenAI Content Moderation API. It also supports OpenAI-compatible custom endpoints.
 
-This repository contains the requirement definitions for a coding agent to implement this GitHub Action.
+### Features
+
+- **Automatic Text Extraction**: Automatically includes titles for Issues, PRs, and Discussions
+- **Text Normalization**: Normalizes text for consistent detection (Unicode NFKC, whitespace handling)
+- **Smart Content Hiding**:
+  - Comments: Minimized (collapsed with reason)
+  - Issues: Closed + Locked
+  - Pull Requests: Closed + Locked
+  - Discussions: Locked
+- **Custom Endpoint Support**: Works with GitHub Copilot API, OpenAI, Azure OpenAI, Ollama, and any OpenAI-compatible endpoint
 
 ## Usage
 
@@ -35,23 +44,6 @@ jobs:
       pull-requests: write
       discussions: write
     steps:
-      - name: Prepare moderation text
-        id: prepare_text
-        run: |
-          TEXT_TO_MODERATE=""
-          if [[ "${{ github.event_name }}" == "issue_comment" || "${{ github.event_name }}" == "pull_request_review_comment" || "${{ github.event_name }}" == "discussion_comment" ]]; then
-            TEXT_TO_MODERATE="${{ github.event.comment.body }}"
-          elif [[ "${{ github.event_name }}" == "issues" ]]; then
-            TEXT_TO_MODERATE="${{ github.event.issue.title }}\n${{ github.event.issue.body }}"
-          elif [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "pull_request_target" ]]; then
-            TEXT_TO_MODERATE="${{ github.event.pull_request.title }}\n${{ github.event.pull_request.body }}"
-          elif [[ "${{ github.event_name }}" == "discussion" ]]; then
-            TEXT_TO_MODERATE="${{ github.event.discussion.title }}\n${{ github.event.discussion.body }}"
-          fi
-          echo "text<<EOF" >> $GITHUB_OUTPUT
-          echo "$TEXT_TO_MODERATE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Moderate content
         id: moderator
         uses: Walkmana-25/github-comment-moderation@main
@@ -60,15 +52,12 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           openai-endpoint: ${{ secrets.OPENAI_ENDPOINT }}
           openai-model: ${{ secrets.OPENAI_MODEL }}
-
-          text-to-moderate: ${{ steps.prepare_text.outputs.text }}
-
+          # text-to-moderate is optional - auto-populated from event
 
       - name: Post-moderation summary
         if: steps.moderator.outputs.is-inappropriate == 'true'
         run: |
           echo "Content was flagged for the following reasons: ${{ steps.moderator.outputs.flagged-categories }}"
-          echo "The content has been hidden, and the workflow continues to run successfully."
 ```
 
 ## Configuration Options
@@ -81,8 +70,21 @@ This action supports the following inputs:
 | `openai-api-key` | No | `${{ github.token }}` | The API key for the OpenAI-compatible endpoint. If not provided, the `github-token` will be used (for GitHub Copilot API) |
 | `openai-endpoint` | No | `https://models.github.ai/inference` | The base URL of the OpenAI-compatible API endpoint |
 | `openai-model` | No | `openai/gpt-4.1-mini` | The model to use for content moderation |
-| `text-to-moderate` | Yes | - | The text content to moderate |
+| `text-to-moderate` | No | *(auto-populated)* | The text content to moderate. If not provided, will be auto-populated from the event: |
+| | | | - **Issues/PRs/Discussions**: `title + "\\n\\n" + body` |
+| | | | - **Comments**: `body` only |
 | `retry-count` | No | `3` | Number of retry attempts for API calls |
+
+### Content Moderated by Event Type
+
+| Event Type | Content Moderated | Action When Flagged |
+|------------|------------------|---------------------|
+| `issues` | Title + Body | Closed + Locked |
+| `pull_request`, `pull_request_target` | Title + Body | Closed + Locked |
+| `issue_comment` | Comment body | Minimized |
+| `pull_request_review_comment` | Comment body | Minimized |
+| `discussion` | Title + Body | Locked |
+| `discussion_comment` | Comment body | Minimized |
 
 ### Custom Endpoint Usage
 
@@ -138,7 +140,36 @@ with:
 | Output | Description |
 |--------|-------------|
 | `is-inappropriate` | Whether the content was flagged as inappropriate (`true` or `false`) |
-| `flagged-categories` | Comma-separated list of flagged categories |
+| `flagged-categories` | Comma-separated list of flagged categories (e.g., `hate,violence`) |
 | `moderation-results-json` | Full JSON response from the API |
 
+## Text Normalization
 
+The action automatically normalizes text before moderation to ensure consistent detection:
+
+- **Unicode NFKC normalization**: Handles compatibility characters (important for Japanese text)
+- **Whitespace normalization**: Collapses multiple spaces/tabs into single spaces
+- **Trailing newline removal**: Ensures "text\n" is detected the same as "text"
+
+This means variations like `"ばーかばーか\n"` will be detected consistently as inappropriate.
+
+## Permissions
+
+The action requires the following permissions:
+
+```yaml
+permissions:
+  issues: write      # For closing/locking issues
+  pull-requests: write  # For closing/locking PRs
+  discussions: write   # For locking discussions
+```
+
+## Content Policy
+
+The action uses the following content policy for moderation:
+
+- Hate speech or discriminatory language
+- Sexual content or explicit material
+- Violence, threats, or promoting harm
+- Self-harm or suicide-related content
+- Harassment or bullying

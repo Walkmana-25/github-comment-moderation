@@ -11,6 +11,44 @@ interface ModerationResponse {
   confidence_score?: number;
 }
 
+function buildTextToModerate(inputText: string, eventName: string): string {
+  // If user explicitly provided text-to-moderate, use it as-is
+  if (inputText) {
+    return inputText;
+  }
+
+  // Otherwise, build text from event payload
+  const payload = github.context.payload;
+
+  switch (eventName) {
+    case 'issues': {
+      const title = payload.issue?.title || '';
+      const body = payload.issue?.body || '';
+      return title ? `${title}\n\n${body}` : body;
+    }
+
+    case 'pull_request':
+    case 'pull_request_target': {
+      const title = payload.pull_request?.title || '';
+      const body = payload.pull_request?.body || '';
+      return title ? `${title}\n\n${body}` : body;
+    }
+
+    case 'discussion': {
+      const title = payload.discussion?.title || '';
+      const body = payload.discussion?.body || '';
+      return title ? `${title}\n\n${body}` : body;
+    }
+
+    case 'issue_comment':
+    case 'pull_request_review_comment':
+    case 'discussion_comment':
+    default:
+      // For comments, return body only
+      return payload.comment?.body || '';
+  }
+}
+
 async function hideContent(githubToken: string, eventName: string) {
     const octokit = github.getOctokit(githubToken);
     const payload = github.context.payload;
@@ -157,7 +195,8 @@ export async function run(): Promise<void> {
     let openaiApiKey: string = core.getInput('openai-api-key', { required: false });
     const openaiEndpoint: string = core.getInput('openai-endpoint', { required: false });
     const openaiModel: string = core.getInput('openai-model', { required: false });
-    const textToModerate: string = core.getInput('text-to-moderate', { required: true });
+    const inputText: string = core.getInput('text-to-moderate', { required: false }) || '';
+    const textToModerate: string = buildTextToModerate(inputText, github.context.eventName);
     const retryCount: number = parseInt(core.getInput('retry-count', { required: false }) || '3', 10);
 
     // Use github-token as the default API key if openai-api-key is not provided
