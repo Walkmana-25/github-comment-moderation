@@ -2,7 +2,7 @@
 
 ## Overview
 
-This GitHub Action moderates the content of issues, pull requests, and comments using the OpenAI Content Moderation API. If content is flagged as inappropriate based on a user-defined threshold, it will be hidden.
+This GitHub Action moderates the content of issues, pull requests, and comments using the OpenAI Content Moderation API. It also supports OpenAI-compatible custom endpoints by setting the `openai-api-base-url` input to your custom API base URL. If content is flagged as inappropriate based on a user-defined threshold, it will be hidden.
 
 This repository contains the requirement definitions for a coding agent to implement this GitHub Action.
 
