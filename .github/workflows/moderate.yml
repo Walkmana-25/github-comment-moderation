@@ -59,5 +59,7 @@ jobs:
         uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          openai-api-key: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY || secrets.GITHUB_TOKEN }}
+          openai-endpoint: ${{ secrets.OPENAI_ENDPOINT }}
+          openai-model: ${{ secrets.OPENAI_MODEL }}
           text-to-moderate: ${{ steps.prepare_text.outputs.text }}
