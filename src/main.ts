@@ -11,58 +11,119 @@ interface ModerationResponse {
   confidence_score?: number;
 }
 
-async function getCommentNodeId(): Promise<string> {
-  const eventName = github.context.eventName;
-  const payload = github.context.payload;
-
-  let nodeId = '';
-
-  switch (eventName) {
-    case 'issue_comment':
-    case 'pull_request_review_comment':
-      nodeId = payload.comment?.node_id;
-      break;
-    case 'discussion_comment':
-      nodeId = payload.comment?.node_id;
-      break;
-    case 'issues':
-      nodeId = payload.issue?.node_id;
-      break;
-    case 'pull_request':
-    case 'pull_request_target':
-      nodeId = payload.pull_request?.node_id;
-      break;
-    case 'discussion':
-        nodeId = payload.discussion?.node_id;
-        break;
-    default:
-      core.info(`Unsupported event type: ${eventName}`);
-  }
-
-  if (!nodeId) {
-    throw new Error('Could not determine the node_id from the event payload.');
-  }
-
-  return nodeId;
-}
-
-async function hideContent(githubToken: string, nodeId: string) {
+async function hideContent(githubToken: string, eventName: string) {
     const octokit = github.getOctokit(githubToken);
-    // Note: The 'minimizeComment' mutation works for issues, PRs, and their comments.
-    // Hiding discussions and discussion comments might require different mutations
-    // which are not covered by this simplified example.
-    await octokit.graphql(`
-      mutation($input: MinimizeCommentInput!) {
-        minimizeComment(input: $input) {
-          clientMutationId
+    const payload = github.context.payload;
+
+    try {
+      switch (eventName) {
+        case 'issue_comment':
+        case 'pull_request_review_comment':
+        case 'discussion_comment': {
+          const nodeId = payload.comment?.node_id;
+          if (!nodeId) {
+            throw new Error('Could not determine comment node_id');
+          }
+          await octokit.graphql(`
+            mutation($input: MinimizeCommentInput!) {
+              minimizeComment(input: $input) {
+                clientMutationId
+              }
+            }
+          `, {
+            input: {
+              subjectId: nodeId,
+              classifier: 'ABUSE',
+            }
+          });
+          core.info(`Minimized comment with node_id: ${nodeId}`);
+          break;
         }
+
+        case 'issues': {
+          const issueNumber = payload.issue?.number;
+          const repoName = payload.repository?.name;
+          const repoOwner = payload.repository?.owner?.login;
+          if (!issueNumber || !repoName || !repoOwner) {
+            throw new Error('Could not determine issue details');
+          }
+          // Close the issue
+          await octokit.rest.issues.update({
+            owner: repoOwner,
+            repo: repoName,
+            issue_number: issueNumber,
+            state: 'closed',
+            state_reason: 'not_planned',
+          });
+          // Lock the issue
+          await octokit.rest.issues.lock({
+            owner: repoOwner,
+            repo: repoName,
+            issue_number: issueNumber,
+            lock_reason: 'spam',
+          });
+          core.info(`Closed and locked issue #${issueNumber}`);
+          break;
+        }
+
+        case 'pull_request':
+        case 'pull_request_target': {
+          const prNumber = payload.pull_request?.number;
+          const repoName = payload.repository?.name;
+          const repoOwner = payload.repository?.owner?.login;
+          if (!prNumber || !repoName || !repoOwner) {
+            throw new Error('Could not determine PR details');
+          }
+          // Close the PR
+          await octokit.rest.pulls.update({
+            owner: repoOwner,
+            repo: repoName,
+            pull_number: prNumber,
+            state: 'closed',
+          });
+          // Lock the PR (uses the same lock endpoint as issues)
+          await octokit.rest.issues.lock({
+            owner: repoOwner,
+            repo: repoName,
+            issue_number: prNumber,
+            lock_reason: 'spam',
+          });
+          core.info(`Closed and locked PR #${prNumber}`);
+          break;
+        }
+
+        case 'discussion': {
+          const discussionId = payload.discussion?.node_id;
+          if (!discussionId) {
+            throw new Error('Could not determine discussion node_id');
+          }
+          await octokit.graphql(`
+            mutation($input: LockDiscussionInput!) {
+              lockDiscussion(input: $input) {
+                discussion {
+                  id
+                }
+              }
+            }
+          `, {
+            input: {
+              discussionId: discussionId,
+              reason: 'SPAM',
+            }
+          });
+          core.info(`Locked discussion with node_id: ${discussionId}`);
+          break;
+        }
+
+        default:
+          core.warning(`Unsupported event type for hiding: ${eventName}`);
       }
-    `, {
-      input: {
-        subjectId: nodeId,
-        classifier: 'ABUSE',
+    } catch (error) {
+      if (error instanceof Error) {
+        core.warning(`Failed to hide content: ${error.message}`);
       }
-    });
+      throw error;
+    }
   }
 
 function constructPrompt(textToModerate: string): string {
@@ -159,11 +220,9 @@ export async function run(): Promise<void> {
       core.setOutput('flagged-categories', flaggedCategoriesStr);
 
       try {
-        const nodeId = await getCommentNodeId();
-        await hideContent(githubToken, nodeId);
-        core.info(`Successfully hid content with node_id: ${nodeId}`);
+        await hideContent(githubToken, github.context.eventName);
       } catch (hideError) {
-          core.warning(`Failed to hide content. This might be due to missing permissions or an unsupported event type. Error: ${hideError}`);
+        // Error is already logged in hideContent
       }
 
       core.info(`Content was flagged as inappropriate. Categories: ${flaggedCategoriesStr}. Reasoning: ${moderationResult.reasoning || 'N/A'}`);
