@@ -49,6 +49,11 @@ jobs:
 
       - name: Build
         run: npm run build
+      
+      - name: Commit Changes
+        run: |
+          git add package.json package-lock.json dist/index.js
+          git commit -m "chore(release build): v${{ steps.version.outputs.version }} by Github Actions"
 
       - name: Push Changes
         run: |
