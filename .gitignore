@@ -1,8 +1,7 @@
 # Dependencies
 /node_modules
 
-# Build artifacts
-/dist
+# Build artifacts are committed for GitHub Actions distribution
 
 # Logs
 logs
