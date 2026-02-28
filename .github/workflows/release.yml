@@ -49,11 +49,23 @@ jobs:
 
       - name: Build
         run: npm run build
-      
+
+      - name: Check Build Status
+        run: |
+          echo "=== Checking git status ==="
+          git status
+          echo "=== Checking dist directory ==="
+          ls -la dist/
+
       - name: Commit Changes
         run: |
-          git add package.json package-lock.json dist/index.js
-          git commit -m "chore(release build): v${{ steps.version.outputs.version }} by Github Actions"
+          git add -f package.json package-lock.json dist/index.js
+          git status
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release build): ${{ steps.version.outputs.version }} by Github Actions"
+          else
+            echo "No changes to commit"
+          fi
 
       - name: Push Changes
         run: |
