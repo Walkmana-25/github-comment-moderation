@@ -18,6 +18,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -36,7 +38,11 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
 
       - name: Update Version
-        run: npm version ${{ github.event.inputs.version-increment }}
+        id: version
+        run: |
+          NEW_VERSION=$(npm version ${{ github.event.inputs.version-increment }})
+          echo "tag=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Install Dependencies
         run: npm ci
@@ -52,6 +58,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.tag }}
+          name: v${{ steps.version.outputs.tag }}
           files: dist/index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
