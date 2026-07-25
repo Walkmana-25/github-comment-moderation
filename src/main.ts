@@ -190,6 +190,8 @@ ${textToModerate}
 
 export async function run(): Promise<void> {
   try {
+    core.info(`Starting content moderation for event: ${github.context.eventName}`);
+
     // Get inputs
     const githubToken: string = core.getInput('github-token', { required: true });
     let openaiApiKey: string = core.getInput('openai-api-key', { required: false });
@@ -198,6 +200,7 @@ export async function run(): Promise<void> {
     const inputText: string = core.getInput('text-to-moderate', { required: false }) || '';
     const textToModerate: string = buildTextToModerate(inputText, github.context.eventName);
     const retryCount: number = parseInt(core.getInput('retry-count', { required: false }) || '3', 10);
+    core.info(`Prepared moderation target (length: ${textToModerate.length})`);
 
     // Use github-token as the default API key if openai-api-key is not provided
     if (!openaiApiKey) {
