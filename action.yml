@@ -33,5 +33,5 @@ outputs:
   moderation-results-json:
     description: 'The full JSON response from the OpenAI API.'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
