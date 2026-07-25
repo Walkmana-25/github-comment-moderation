@@ -98,6 +98,8 @@ describe('Content Moderator Action', () => {
     expect(mockedCore.setOutput).toHaveBeenCalledWith('flagged-categories', '');
     expect(mockedCore.info).toHaveBeenCalledWith(expect.stringContaining('Starting content moderation'));
     expect(mockedCore.info).toHaveBeenCalledWith(expect.stringContaining('Prepared moderation target'));
+    expect(mockedCore.info).toHaveBeenCalledWith(expect.stringContaining('Moderation config:'));
+    expect(mockedCore.info).toHaveBeenCalledWith(expect.stringContaining('Calling moderation model (attempt 1/3)'));
   });
 
   it('should retry OpenAI API call on failure', async () => {
